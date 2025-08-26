@@ -36,7 +36,6 @@ def merge(lista1, lista2):
     resultado.extend(lista1)    
     resultado.extend(lista2)
 
-    
     return resultado
 
 
