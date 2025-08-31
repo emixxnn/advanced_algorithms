@@ -35,7 +35,5 @@ def merge(lista1, lista2):
     # agregar los elementos restantes de lista1 o lista2
     resultado.extend(lista1)    
     resultado.extend(lista2)
-
+    
     return resultado
-
-
