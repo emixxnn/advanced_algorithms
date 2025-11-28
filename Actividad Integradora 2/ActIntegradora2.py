@@ -7,7 +7,7 @@ import math
 def mstPrim(distancias):
     n = len(distancias)
     visitado = [False] * n
-    minHeap = [(0, -1, 0)] #Min heap con tuplas (peso, nodoOrigen, nodoDestino)
+    minHeap = [(0, -1, 0)] # Min heap con tuplas (peso, nodoOrigen, nodoDestino)
     mst = []
 
     while minHeap:
@@ -18,7 +18,7 @@ def mstPrim(distancias):
                 mst.append((nodoOrigen, nodoDestino))
 
             for i in range(n):
-                if not visitado[i] and distancias[nodoDestino][i] > 0: #Un camino que no existe puede ser 0 o cualquier negativo por ejemplo -1
+                if not visitado[i] and distancias[nodoDestino][i] > 0:  # Un camino que no existe puede ser 0 o cualquier negativo por ejemplo -1
                     heapq.heappush(minHeap, (distancias[nodoDestino][i], nodoDestino, i))
                     
     return mst
@@ -26,11 +26,11 @@ def mstPrim(distancias):
 def tspHeldKarp(distancias):
     n = len(distancias)
     memo = [[-1] * (1 << n) for _ in range(n)]
-    path_memo = [[-1] * (1 << n) for _ in range(n)] #Guardamos en cada decision el siguiente nodo que visitamos para reconstruir el camino al final
+    # Guardamos en cada decision el siguiente nodo que visitamos para reconstruir el camino
+    path_memo = [[-1] * (1 << n) for _ in range(n)] 
     costo_minimo = tspHelper(0, 1, distancias, memo, path_memo)
 
-
-    # Codigo generado con apoyo de IA para reconstruir la ruta y convertir nodos a letras
+    # Reconstruir la ruta y convertir nodos a letras
     ruta = []
     curr = 0
     bitmask = 1
@@ -40,12 +40,9 @@ def tspHeldKarp(distancias):
     ruta.append(nodos_char[curr])
 
     for _ in range(n - 1):
-        # Obtenemos el siguiente mejor paso guardado en la tabla
         siguiente_nodo = path_memo[curr][bitmask]
-        
         ruta.append(nodos_char[siguiente_nodo])
-        
-        bitmask = bitmask | (1 << siguiente_nodo) # "Encendemos" el bit del nodo visitado
+        bitmask = bitmask | (1 << siguiente_nodo)
         curr = siguiente_nodo
 
     # Agregar el regreso al inicio
@@ -65,15 +62,14 @@ def tspHelper(curr, bitmask, distancias, memo, path_memo):
     minDist = float('inf')
 
     for colonia in range(n):
-        if bitmask & (1 << colonia) == 0: #Si la colonia no ha sido visitada 
-            if distancias[curr][colonia] > 0: #Si hay camino entre las dos colonias
+        if bitmask & (1 << colonia) == 0: # Si la colonia no ha sido visitada 
+            if distancias[curr][colonia] > 0: # Si hay camino
                 dist = distancias[curr][colonia] + tspHelper(colonia, bitmask | (1 << colonia), distancias, memo, path_memo)
                 if dist < minDist:
                     minDist = dist
-                    path_memo[curr][bitmask] = colonia #Guardamos el siguiente nodo a visitar para esta combinacion de curr y bitmask
+                    path_memo[curr][bitmask] = colonia
 
-
-    memo[curr][bitmask] = minDist #Guardamos la distancia minima para llegar a este nodo con los nodos visitados en bitmask
+    memo[curr][bitmask] = minDist
     return minDist
 
 def bfs(residual, inicio, fin, padre):
@@ -92,23 +88,24 @@ def bfs(residual, inicio, fin, padre):
                 visitado[v] = True
                 padre[v] = u
                 if v == fin:
-                    return True #Si existe un camino 
-    return False #No existe un camino 
+                    return True 
+    return False
 
 def flujoMaximoEdmondsKarp(flujos, inicio, fin):
     n = len(flujos)
     residual = [row[:] for row in flujos]
     flujoMaximo = 0
     padre = [-1] * n
-    while bfs(residual, inicio, fin, padre): #Mientras exista un camino del nodo inicio al nodo fin
+    
+    while bfs(residual, inicio, fin, padre):
         flujoCamino = float('inf')
         actual = fin
-        while actual != inicio: # Encontrar el flujo minimo en el camino
+        while actual != inicio:
             flujoCamino = min(flujoCamino, residual[padre[actual]][actual])
             actual = padre[actual]
 
         siguiente = fin
-        while siguiente != inicio: # Actualizar el grafo residual permitiendo encontrar mejores caminos
+        while siguiente != inicio:
             u = padre[siguiente]
             residual[u][siguiente] -= flujoCamino
             residual[siguiente][u] += flujoCamino
@@ -118,109 +115,87 @@ def flujoMaximoEdmondsKarp(flujos, inicio, fin):
 
     return flujoMaximo
 
-def busquedaGeometrica(coordenadas): #Busqueda geometrica como la hicimos en la actividad pasada
-    l = len(coordenadas)
-    mid = l // 2
-    coordenadas = sorted(coordenadas, key=lambda coord: coord[0])
-    L = coordenadas[:mid]
-    R = coordenadas[mid:]
-    minDistL = float('inf')
-    minDistLCords = None
-    minDistR = float('inf')
-    minDistRCords = None
-    for i in range(len(L)):
-        for j in range(i + 1, len(L)):
-            dx = L[i][0] - L[j][0]
-            dy = L[i][1] - L[j][1]
-            d = math.sqrt(dx * dx + dy * dy)
-            if d < minDistL:
-                minDistL = d
-                minDistLCords = (L[i], L[j])
-
-
-    for i in range(len(R)):
-        for j in range(i + 1, len(R)):
-            dx = R[i][0] - R[j][0]
-            dy = R[i][1] - R[j][1]
-            d = math.sqrt(dx * dx + dy * dy)
-            if d < minDistR:
-                minDistR = d
-                minDistRCords = (R[i], R[j])
-
-    globalMinDist = min(minDistL, minDistR)
-    stripMinDist = float('inf')
-    stripMinCords = None
-    xMid = coordenadas[mid][0]
-    xMinStrip = xMid - globalMinDist
-    xMaxStrip = xMid + globalMinDist
-    stripCoords = [coord for coord in coordenadas if xMinStrip <= coord[0] <= xMaxStrip]
-    stripCoords = sorted(stripCoords, key=lambda coord: coord[1])
-
-    for i in range(len(stripCoords)):
-        for j in range(i + 1, len(stripCoords)):
-            if (stripCoords[j][1] - stripCoords[i][1]) >= globalMinDist:
-                break
-            dx = stripCoords[i][0] - stripCoords[j][0]
-            dy = stripCoords[i][1] - stripCoords[j][1]
-            d = math.sqrt(dx * dx + dy * dy)
-            if d < stripMinDist:
-                stripMinDist = d
-                stripMinCords = (stripCoords[i], stripCoords[j])
-
-    globalMinDist = min(globalMinDist, stripMinDist)
-    closestPairs = []
-    if globalMinDist == minDistL:
-        closestPairs = [minDistLCords]
-    if globalMinDist == minDistR:
-        closestPairs = [minDistRCords]
-    if globalMinDist == stripMinDist:
-        closestPairs = [stripMinCords]
-
-    return closestPairs, globalMinDist
+# corrección paso 4: En lugar de buscar pares cercanos entre sí, 
+# buscamos qué central existente está más cerca de una nueva ubicación.
+def encontrarCentralMasCercana(coordenadas, nueva_contratacion):
+    minDist = float('inf')
+    closestIndex = -1
+    
+    # Búsqueda lineal O(N) para encontrar el vecino más cercano (Voronoi)
+    for i in range(len(coordenadas)):
+        cx, cy = coordenadas[i]
+        nx, ny = nueva_contratacion
+        
+        dx = cx - nx
+        dy = cy - ny
+        d = math.sqrt(dx * dx + dy * dy)
+        
+        if d < minDist:
+            minDist = d
+            closestIndex = i
+            
+    return closestIndex, minDist
 
 def main():
     # Pedir inputs
-    n = int(input("Numero de colonias: "))
+    try:
+        n_input = input("Numero de colonias: ").strip()
+        if not n_input: return # Salir si está vacío
+        n = int(n_input)
+    except ValueError:
+        print("Error: Ingrese un número entero válido.")
+        return
+
     distancias = []
+    print("Ingrese la matriz de adyacencia (distancias):")
     for _ in range(n):
         d = list(map(int, input().split()))
         distancias.append(d)
 
     flujos = []
+    print("Ingrese la matriz de capacidades (flujos):")
     for _ in range(n):
         f = list(map(int, input().split()))
         flujos.append(f)
 
     coordenadas = []
+    print("Ingrese las coordenadas (x, y) de las centrales:")
     for _ in range(n):
-        x, y = map(float, input().split())
+        # corrección: Limpiamos paréntesis y comas antes de leer
+        line = input().strip().replace('(', '').replace(')', '').replace(',', ' ')
+        x, y = map(float, line.split())
         c = (x, y)
         coordenadas.append(c)
 
-    # Paso 1 forma de cablear colonias
     mst = mstPrim(distancias)
-    print("\nAristas del MST:")
+    print("\n1. Aristas del MST (Cableado Óptimo):")
+    # corrección: Imprimir Letras (A-Z) en lugar de números
     for u, v in mst:
-        print(f"{u} - {v}") 
+        nodo_u = chr(ord('A') + u)
+        nodo_v = chr(ord('A') + v)
+        print(f"{nodo_u} - {nodo_v}") 
 
-    # Paso 2 ruta del viajero por todas las colonias
     costo_minimo, ruta = tspHeldKarp(distancias)
-    print(f"\nCosto minimo del TSP: {costo_minimo}")
-    print("Ruta del TSP:", " -> ".join(ruta))
+    print(f"\n2. Costo minimo del TSP: {costo_minimo}")
+    print("   Ruta del TSP:", " -> ".join(ruta))
 
-    # Paso 3 Flujo maximo de datos entre colonia inicial y final
     inicio = 0
     fin = n - 1
     flujo_maximo = flujoMaximoEdmondsKarp(flujos, inicio, fin)
-    print(f"\nFlujo maximo entre colonia {inicio} y colonia {fin}: {flujo_maximo}")
+    print(f"\n3. Flujo maximo entre colonia {chr(ord('A') + inicio)} y colonia {chr(ord('A') + fin)}: {flujo_maximo}")
 
+    # corrección: Se pide input de la nueva ubicación para asignarle la central más cercana
+    print("\nIngrese las coordenadas de la nueva contratación (x, y):")
+    line = input().strip().replace('(', '').replace(')', '').replace(',', ' ')
+    nx, ny = map(float, line.split())
+    nueva_contratacion = (nx, ny)
     
-    # Paso 4 Colonias mas cercanas con busqueda geometrica    
-    closestPairs, minDist = busquedaGeometrica(coordenadas)
-    print(f"\nDistancia minima entre colonias: {minDist}")
-    print("Pares de colonias mas cercanas:")
-    for pair in closestPairs:
-        print(f"{pair[0]} - {pair[1]}")
+    idx_cercana, dist_cercana = encontrarCentralMasCercana(coordenadas, nueva_contratacion)
+    nombre_central = chr(ord('A') + idx_cercana)
+    
+    print(f"\n4. La central más cercana a la nueva contratación es: {nombre_central}")
+    print(f"   Coordenadas de la central: {coordenadas[idx_cercana]}")
+    print(f"   Distancia: {dist_cercana:.2f}")
 
 if __name__ == "__main__":
     main()
